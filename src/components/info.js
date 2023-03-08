@@ -9,34 +9,28 @@ export const Info = () => {
   const params = useParams();
   const filmId = params.id;
   let [film, setFilm] = useState([]);
-  let [characters, setCharacters] = useState();
+  let [characters, setCharacters] = useState(null);
 
   useEffect(() => {
     axios.get(src).then((data) => {
       setFilm(data.data.results);
     });
   }, []);
-
   let findFilm = film.find((item) => {
-    if (item.episode_id == filmId) {
-      return true;
-    }
+    if (item.episode_id == filmId) return true;
   });
 
-  let add = [];
+  if (findFilm?.characters) {
+    fetchData(findFilm.characters);
+  }
 
-  add = findFilm?.characters || [];
-
-  useEffect(() => {
-    add.map((item) => {
-      axios.get(item).then((data) => setCharacters(data.data));
-    });
-  }, [characters]);
-
-  let person = [];
-
-  if (characters !== undefined) {
-    person.push(characters);
+  async function fetchData(add) {
+    const a = [];
+    for await (const link of add) {
+      const res = await axios.get(link);
+      a.push(res.data);
+    }
+    setCharacters(a);
   }
 
   return (
@@ -56,12 +50,14 @@ export const Info = () => {
             <hr />
             <h4 className="card-text">Producer: {findFilm.producer}</h4>
             <hr />
-            <h2>characters: </h2>
-            {person.length == 0 && <h2>Loading...</h2>}
-            {person.length > 0 &&
-              person.map((item) => {
+            <h2>Characters: </h2>
+            {characters ? (
+              characters.map((item) => {
                 return <h3>{item.name}</h3>;
-              })}
+              })
+            ) : (
+              <h1>loading...</h1>
+            )}
           </div>
           <div className="card-footer text-muted">It's all information!</div>
         </div>
